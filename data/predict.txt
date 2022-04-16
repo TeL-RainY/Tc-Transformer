@@ -1,0 +1,5 @@
+Hg                                                          4.12
+MgB2                                                        39
+FeSe                                                        8
+YBa2Cu3O7                                                   91
+YBa2Cu3O6.6                                                 60
