@@ -1,0 +1,12 @@
+NbTi                                                        8.54
+NbSe2                                                       4.23
+TaS2                                                        3.54
+MoS2                                                        3.52
+WTe2                                                        1.52
+VTe2                                                        1.26
+ZrTe5                                                       1.51
+YBa2Cu3O7                                                   82.60
+Ba0.6K0.4Fe2As2                                             33.85
+FeSe                                                        7.90
+KV3Sb5                                                      0.39
+RbV3Sb5                                                     0.40

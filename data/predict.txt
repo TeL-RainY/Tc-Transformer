@@ -1,5 +1,12 @@
-Hg                                                          4.12
-MgB2                                                        39
-FeSe                                                        8
-YBa2Cu3O7                                                   91
-YBa2Cu3O6.6                                                 60
+NbTi                                                        
+NbSe2                                                       
+TaS2                                                        
+MoS2                                                        
+WTe2                                                        
+VTe2                                                        
+ZrTe5                                                            
+YBa2Cu3O7                                                   
+Ba0.6K0.4Fe2As2                                             
+FeSe                                                        
+KV3Sb5                                                      
+RbV3Sb5                                                                             

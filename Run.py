@@ -29,8 +29,8 @@ def Run(module:model.torch.nn.Module, module_arg:list, embed_model:tuple, model_
     opt_train.model_name = model_name
 
     opt_predict_data = framework.option.data()
-    opt_predict_data.data_dir_list = [#'./data/predict.txt',
-                                        './data/test.txt'
+    opt_predict_data.data_dir_list = ['./data/predict.txt'
+                                      #'./data/test.txt'
                                     ]
     opt_predict_data.embed_func = utils.utils.Embed
     opt_predict_data.embed_func_arg = [embed_model]
@@ -40,9 +40,15 @@ def Run(module:model.torch.nn.Module, module_arg:list, embed_model:tuple, model_
     opt_predict = framework.option.predict()
     opt_predict.model_path = './models/'+model_name+'.pkl'
     opt_predict.predict_dir = './predict'
-    opt_predict.predict_name = 'test_answer'
+    opt_predict.predict_name = model_name+'_answer'
 
     if train:framework.train(opt_train_data, opt_train).Run()
     if predict:framework.predict(opt_predict_data, opt_predict).Run()
 
-Run(model.models.ATCNN, [64], utils.embed_models().Atom_Table(), 'ATCNN1-1', train=False)
+#   Run(model.models.SetTransformer, ['Dense_Decoder', 6, 3], utils.embed_models().OAT_without_channels(), 'SetTransformer7-2', train=False)
+
+#   Run(model.models.ATCNN, [64], utils.embed_models().Atom_Table(), 'ATCNN1-1', train=False)
+
+for i in range(1, 6):
+    Run(model.models.SetTransformer, ['Dense_Decoder', 6, 3], utils.embed_models().OAT_without_channels(), 'SetTransformer7-'+'{}'.format(i), train=False)
+    Run(model.models.ATCNN, [64], utils.embed_models().Atom_Table(), 'ATCNN1-'+'{}'.format(i), train=False)
