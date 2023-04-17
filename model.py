@@ -1,319 +1,582 @@
-import torch.nn.functional as torch_F
-import torch
-import math, utils
+import keras.models as kmodels
+import keras.layers as layers
+import keras.losses as losses
+import keras.optimizers as optimizers
+import keras.backend as backend
+import tensorflow
+import numpy
 
-class wrap:
-    class Conv2D_Norm_Act(torch.nn.Module):
-        def __init__(self, in_channels:int, out_channels:int, kernel_size:tuple, activate:bool=True):
-            super(wrap.Conv2D_Norm_Act, self).__init__()
-            self.in_channels = in_channels
-            self.out_channels = out_channels
-            self.kernel_size = kernel_size
-            self.activate = activate
+class atom_table:
+    def ATCNN():
+        def ATCNN_shape(vector):
+            return (len(vector), 10, 10, 1)
+        atom_list = ['H' , 'He', 'Li', 'Be', 'B' , 'C' , 'N' , 'O' , 'F' , 'Ne',
+                     'Na', 'Mg', 'Al', 'Si', 'P' , 'S' , 'Cl', 'Ar', 'K' , 'Ca', 
+                     'Sc', 'Ti', 'V' , 'Cr', 'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Zn',
+                     'Ga', 'Ge', 'As', 'Se', 'Br', 'Kr', 'Rb', 'Sr', 'Y' , 'Zr',
+                     'Nb', 'Mo', 'Tc', 'Ru', 'Rh', 'Pd', 'Ag', 'Cd', 'In', 'Sn', 
+                     'Sb', 'Te', 'I' , 'Xe', 'Cs', 'Ba', 'La', 'Ce', 'Pr', 'Nd', 
+                     'Pm', 'Sm', 'Eu', 'Gd', 'Tb', 'Dy', 'Ho', 'Er', 'Tm', 'Yb', 
+                     'Lu', 'Hf', 'Ta', 'W' , 'Re', 'Os', 'Ir', 'Pt', 'Au', 'Hg', 
+                     'Tl', 'Pb', 'Bi', 'Po', 'At', 'Rn', 'Fr', 'Ra', 'Ac', 'Th', 
+                     'Pa', 'U' , 'Np', 'Pu', 'Am', 'Cm', 'Bk', 'Cf', 'Es', 'Fm' 
+                    ]
+        atom_list = list(numpy.reshape(atom_list, (10, 10)).T.flatten())
+        at = {}
+        for location, atom in enumerate(atom_list):
+            at[atom] = location
+        return (at, ATCNN_shape)
 
-            self.pad = torch.nn.ConstantPad2d((math.floor((self.kernel_size[0]-1)/2), math.ceil((self.kernel_size[0]-1)/2), math.floor((self.kernel_size[1]-1)/2), math.ceil((self.kernel_size[1]-1)/2)), 0.0)
-            self.conv = torch.nn.Conv2d(self.in_channels, self.out_channels, self.kernel_size)
-            self.norm = torch.nn.BatchNorm2d(self.out_channels)
+    def Dense():
+        def Dense_shape(vector):
+            return (len(vector), 100)
+        atom_list = ['H' , 'He', 'Li', 'Be', 'B' , 'C' , 'N' , 'O' , 'F' , 'Ne',
+                     'Na', 'Mg', 'Al', 'Si', 'P' , 'S' , 'Cl', 'Ar', 'K' , 'Ca', 
+                     'Sc', 'Ti', 'V' , 'Cr', 'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Zn',
+                     'Ga', 'Ge', 'As', 'Se', 'Br', 'Kr', 'Rb', 'Sr', 'Y' , 'Zr',
+                     'Nb', 'Mo', 'Tc', 'Ru', 'Rh', 'Pd', 'Ag', 'Cd', 'In', 'Sn', 
+                     'Sb', 'Te', 'I' , 'Xe', 'Cs', 'Ba', 'La', 'Ce', 'Pr', 'Nd', 
+                     'Pm', 'Sm', 'Eu', 'Gd', 'Tb', 'Dy', 'Ho', 'Er', 'Tm', 'Yb', 
+                     'Lu', 'Hf', 'Ta', 'W' , 'Re', 'Os', 'Ir', 'Pt', 'Au', 'Hg', 
+                     'Tl', 'Pb', 'Bi', 'Po', 'At', 'Rn', 'Fr', 'Ra', 'Ac', 'Th', 
+                     'Pa', 'U' , 'Np', 'Pu', 'Am', 'Cm', 'Bk', 'Cf', 'Es', 'Fm' 
+                    ]
+        at = {}
+        for location, atom in enumerate(atom_list):
+            at[atom] = location
+        return (at, Dense_shape)
 
-        def forward(self, input):
-            x = self.pad(input)
-            x = self.conv(x)
-            x = self.norm(x)
-            if self.activate: x = torch_F.relu(x)
-            return x
+    def OATCNN():
+        def OATCNN_shape(vector):
+            return (len(vector), 22, 7, 1)
+        atom_list = [   'H' , 'X' , 'X' , 'X' , 'X' , 'X' , 'X' , 'X' , 'X' , 'X' , 'X' , 'X' , 'X' , 'X' , 'X' , 'X' , 'X' , 'He', 'Ce', 'Lu', 'Th', 'Lr',
+                        'Li', 'Be', 'X' , 'X' , 'X' , 'X' , 'X' , 'X' , 'X' , 'X' , 'X' , 'X' , 'B' , 'C' , 'N' , 'O' , 'F' , 'Ne', 'Pr', 'Yb', 'Pa', 'No',
+                        'Na', 'Mg', 'X' , 'X' , 'X' , 'X' , 'X' , 'X' , 'X' , 'X' , 'X' , 'X' , 'Al', 'Si', 'P' , 'S' , 'Cl', 'Ar', 'Nd', 'Tm', 'U' , 'Md',
+                        'K' , 'Ca', 'Sc', 'Ti', 'V' , 'Cr', 'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Zn', 'Ga', 'Ge', 'As', 'Se', 'Br', 'Kr', 'Pm', 'Er', 'Np', 'Fm',
+                        'Rb', 'Sr', 'Y' , 'Zr', 'Nb', 'Mo', 'Tc', 'Ru', 'Rh', 'Pd', 'Ag', 'Cd', 'In', 'Sn', 'Sb', 'Te', 'I' , 'Xe', 'Sm', 'Ho', 'Pu', 'Es',
+                        'Cs', 'Ba', 'La', 'Hf', 'Ta', 'W' , 'Re', 'Os', 'Ir', 'Pt', 'Au', 'Hg', 'Tl', 'Pb', 'Bi', 'Po', 'At', 'Rn', 'Eu', 'Dy', 'Am', 'Cf',
+                        'Fr', 'Ra', 'Ac', 'X' , 'X' , 'X' , 'X' , 'X' , 'X' , 'X' , 'X' , 'X' , 'X' , 'X' , 'X' , 'X' , 'X' , 'X' , 'Gd', 'Tb', 'Cm', 'Bk'
+                    ]
+        atom_list = list(numpy.reshape(atom_list, (7, 22)).T.flatten())
+        at = {}
+        for location, atom in enumerate(atom_list):
+            at[atom] = location
+        return (at, OATCNN_shape)
 
-    class Linear_Norm_Drop_Act(torch.nn.Module):
-        def __init__(self, in_features:int, out_features:int, bias:bool=True, drop:bool=True, drop_rate:float=0.2, activate:bool=True):
-            super(wrap.Linear_Norm_Drop_Act, self).__init__()
-            self.in_features = in_features
-            self.out_features = out_features
-            self.bias = bias
-            self.drop = drop
-            self.drop_rate = drop_rate
-            self.activate = activate
+    def RESATCNN():
+        return atom_table.OATCNN()
 
-            self.linear = torch.nn.Linear(self.in_features, self.out_features, self.bias)
-            self.norm = torch.nn.BatchNorm1d(self.out_features)
-            if self.drop: self.dropout = torch.nn.Dropout(self.drop_rate)
+    def SelfAttention():
+        def SelfAttention_shape(vector):
+            return (len(vector), 22, 7)
+        return (atom_table.OATCNN()[0], SelfAttention_shape)
 
-        def forward(self, input):
-            x = self.linear(input)
-            x = self.norm(x)
-            if self.drop: x = self.dropout(x)
-            if self.activate: x = torch_F.relu(x)
-            return x
+    def Transform():
+        def Transform_shape(vector):
+            return (len(vector), 10, 2)
+        atom_list = ['H' , 'He', 'Li', 'Be', 'B' , 'C' , 'N' , 'O' , 'F' , 'Ne',
+                     'Na', 'Mg', 'Al', 'Si', 'P' , 'S' , 'Cl', 'Ar', 'K' , 'Ca', 
+                     'Sc', 'Ti', 'V' , 'Cr', 'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Zn',
+                     'Ga', 'Ge', 'As', 'Se', 'Br', 'Kr', 'Rb', 'Sr', 'Y' , 'Zr',
+                     'Nb', 'Mo', 'Tc', 'Ru', 'Rh', 'Pd', 'Ag', 'Cd', 'In', 'Sn', 
+                     'Sb', 'Te', 'I' , 'Xe', 'Cs', 'Ba', 'La', 'Ce', 'Pr', 'Nd', 
+                     'Pm', 'Sm', 'Eu', 'Gd', 'Tb', 'Dy', 'Ho', 'Er', 'Tm', 'Yb', 
+                     'Lu', 'Hf', 'Ta', 'W' , 'Re', 'Os', 'Ir', 'Pt', 'Au', 'Hg', 
+                     'Tl', 'Pb', 'Bi', 'Po', 'At', 'Rn', 'Fr', 'Ra', 'Ac', 'Th', 
+                     'Pa', 'U' , 'Np', 'Pu', 'Am', 'Cm', 'Bk', 'Cf', 'Es', 'Fm' 
+                    ]
+        at = {}
+        for location, atom in enumerate(atom_list):
+            at[atom] = location
+        return (at, Transform_shape)
 
-    class Identity_Block(torch.nn.Module):
-        def __init__(self, in_channels:int, kernel_size:tuple):
-            super(wrap.Identity_Block, self).__init__()
-            self.channel = in_channels
-            self.kernel_size = kernel_size
+    def Set_Transform():
+        return atom_table.SelfAttention()
 
-            self.conv = torch.nn.Sequential(wrap.Conv2D_Norm_Act(self.channel, self.channel, self.kernel_size), wrap.Conv2D_Norm_Act(self.channel, self.channel, self.kernel_size), wrap.Conv2D_Norm_Act(self.channel, self.channel, self.kernel_size, activate=False))
+class metrics:
+    def Tc_accuracy(y_true, y_pred):
+        y_delta = backend.abs(backend.reshape(y_true - y_pred, [-1]))
+        tensor_one = backend.ones_like(y_delta)
+        accuracy = backend.cast(backend.less_equal(y_delta, tensor_one), 'float32')
+        accuracy = backend.sum(accuracy)/float(len(y_delta))
+        return accuracy                                                #认为误差在1k之内为预测正确, 准确率
 
-        def forward(self, input):
-            shortcut = input
-            x = self.conv(input)
-            x += shortcut
-            output = torch_F.relu(x)
-            return output
+    def superconductor_accuracy(y_true, y_pred):
+        y_t = backend.reshape(y_true, [-1])
+        y_p = backend.reshape(y_pred, [-1])
+        tensor = backend.ones_like(y_t) * 0.1
+        zero = backend.zeros_like(y_t, 'float32')
+        y_t = backend.not_equal(y_t, zero)
+        y_p = backend.greater(y_p, tensor)
+        TP = backend.sum(backend.cast(y_t & y_p, 'float32'))
+        FN = backend.sum(backend.cast(y_t & ~y_p, 'float32'))
+        FP = backend.sum(backend.cast(~y_t & y_p, 'float32'))
+        TN = backend.sum(backend.cast(~y_t & ~y_p, 'float32'))
+        P = TP + FN
+        N = FP + TN                                                                     #认为0.1k一下的为非超导体, 以此得到的分类结果
+        accuracy = (TP+TN)/(P+N)                                                        #准确率
+        precision = TP/(TP+FP)                                                          #精确率
+        recall = TP/P                                                                   #召回率
+        F1 = 2*precision*recall/(precision+recall)                                      #F1值
+        return accuracy
 
-    class Conv_Block(torch.nn.Module):
-        def __init__(self, in_channels:int, filter_num:int, kernel_size:tuple):
-            super(wrap.Conv_Block, self).__init__()
-            self.channel = in_channels
-            self.filter = filter_num
-            self.kernel_size = kernel_size
+    def gen_performance(y_true, y_pred):
+        y_t = backend.reshape(y_true, [-1])
+        y_p = backend.reshape(y_pred, [-1])
+        y_t_mean = backend.mean(y_t)
+        y_p_mean = backend.mean(y_p)
+        y_delta = y_t - y_p
+        SSres = backend.sum(backend.square(y_delta))
+        SStot = backend.sum(backend.square(y_t - y_t_mean))
+        SSreg = backend.sum(backend.square(y_p - y_p_mean))
+        R2 = 1.0 - SSres/SStot                                                          #拟合系数
+        RMSE = backend.sqrt(SSres/float(len(y_delta)))                                  #均方根误差
+        MAE = backend.mean(backend.abs(y_delta))                                        #平均绝对误差
+        CC = backend.sum((y_t-y_t_mean)*(y_p-y_p_mean))/backend.sqrt(SSreg*SStot)       #相关系数
+        return R2
 
-            self.conv1 = torch.nn.Sequential(wrap.Conv2D_Norm_Act(self.channel, self.filter, self.kernel_size), wrap.Conv2D_Norm_Act(self.filter, self.filter, self.kernel_size), wrap.Conv2D_Norm_Act(self.filter, self.filter, self.kernel_size, activate=False))
-            self.conv2 = wrap.Conv2D_Norm_Act(self.channel, self.filter, (1, 1), activate=False)
+class customlayers:
 
-        def forward(self, input):
-            shortcut = input
-            x = self.conv1(input)
-            x += self.conv2(shortcut)
-            output = torch_F.relu(x)
-            return output
+    class Positional_Encoding(layers.Layer):
+        def __init__(self, **kwargs):
+            super(customlayers.Positional_Encoding, self).__init__(**kwargs)
+        def get_config(self):
+            return super().get_config()
+        def build(self, input_shape):
+            super().build(input_shape)
+        def call(self, inputs):
+            if backend.dtype(inputs) != 'float32': inputs = backend.cast(inputs, 'float32')
+            model_dim = inputs.shape[-1]
+            seq_length = inputs.shape[1]
+            position_encodings = numpy.zeros((seq_length, model_dim))
+            for pos in range(seq_length):
+                for i in range(model_dim):
+                    position_encodings[pos][i] = pos / numpy.power(10000, (i-i%2) / model_dim)
+            position_encodings[:, 0::2] = numpy.sin(position_encodings[:, 0::2])
+            position_encodings[:, 1::2] = numpy.cos(position_encodings[:, 1::2])
+            position_encodings = backend.cast(position_encodings, 'float32')
+            outputs = inputs + position_encodings
+            return outputs
+        def compute_output_shape(self, input_shape):
+            return input_shape
 
-    class Feed_Forward(torch.nn.Module):
-        def __init__(self, in_features:int, feed_forward_size:int):
-            super(wrap.Feed_Forward, self).__init__()
-            self.in_features = in_features
-            self.feed_forward_size = feed_forward_size
+    class Scaled_Dot_Product_Attention(layers.Layer):
+        def __init__(self, **kwargs):
+            super(customlayers.Scaled_Dot_Product_Attention, self).__init__(**kwargs)
+        def get_config(self):
+            return super().get_config()
+        def build(self, input_shape):
+            super().build(input_shape)
+        def call(self, inputs):
+            queries, keys, values = inputs
+            if backend.dtype(queries) != 'float32': queries = backend.cast(queries, 'float32')
+            if backend.dtype(keys) != 'float32': keys = backend.cast(keys, 'float32')
+            if backend.dtype(values) != 'float32': values = backend.cast(values, 'float32')
+            matmul = backend.batch_dot(queries, tensorflow.transpose(keys, [0, 2, 1]))
+            scaled_matmul = matmul / int(queries.shape[-1]) ** 0.5
+            softmax_out = backend.softmax(scaled_matmul)
+            outputs = backend.batch_dot(softmax_out, values)
+            return outputs
+        def comopute_output_shape(self, input_shape):
+            shape_q, shape_k, shape_v = input_shape
+            return shape_v
 
-            self.linear1 = torch.nn.Linear(self.in_features, self.feed_forward_size)
-            self.linear2 = torch.nn.Linear(self.feed_forward_size, self.in_features)
+    class Multi_Head_Attention(layers.Layer):
+        def __init__(self, n_heads, keys_dim, values_dim, create_queries=False, **kwargs):
+            self.n_heads = n_heads
+            self.keys_dim = keys_dim
+            self.values_dim = values_dim
+            self.create_queries = create_queries
+            super(customlayers.Multi_Head_Attention, self).__init__(**kwargs)
+        def get_config(self):
+            config = super(customlayers.Multi_Head_Attention, self).get_config()
+            config.update({
+                'n_heads' : self.n_heads,
+                'keys_dim' : self.keys_dim,
+                'values_dim' : self.values_dim,
+                'create_queries' : self.create_queries
+            })
+            return config
+        def build(self, input_shape):
+            self.weights_q = self.add_weight(name='weights_queries', shape=(input_shape[0][-1], self.n_heads * self.keys_dim), initializer='glorot_uniform', trainable=True)
+            self.weights_k = self.add_weight(name='weights_keys', shape=(input_shape[-2][-1], self.n_heads * self.keys_dim), initializer='glorot_uniform', trainable=True)
+            self.weights_v = self.add_weight(name='weights_values', shape=(input_shape[-1][-1], self.n_heads * self.values_dim), initializer='glorot_uniform', trainable=True)
+            self.weights_linear = self.add_weight(name='weights_linear', shape=(self.n_heads * self.values_dim, input_shape[0][-1]), initializer='glorot_uniform', trainable=True)
+            if self.create_queries:
+                self.queries = self.add_weight(name='queries', shape=(input_shape[0][-2], input_shape[0][-1]), initializer='glorot_uniform', trainable=True)
+            super(customlayers.Multi_Head_Attention, self).build(input_shape)
+        def call(self, inputs):
+            if self.create_queries:
+                keys, values = inputs
+                queries = tensorflow.transpose(backend.repeat(self.queries, backend.shape(keys)[0]), [1,0,2])
+            else:
+                queries, keys, values = inputs
+            queries_linear = backend.dot(queries, self.weights_q)
+            keys_linear = backend.dot(keys, self.weights_k)
+            values_linear = backend.dot(values, self.weights_v)
+            queries_multi_heads = backend.concatenate(tensorflow.split(queries_linear, self.n_heads, axis=2), axis=0)
+            keys_multi_heads = backend.concatenate(tensorflow.split(keys_linear, self.n_heads, axis=2), axis=0)
+            values_multi_heads = backend.concatenate(tensorflow.split(values_linear, self.n_heads, axis=2), axis=0)
+            attention_out = customlayers.Scaled_Dot_Product_Attention()([queries_multi_heads, keys_multi_heads, values_multi_heads])
+            attention_concat = backend.concatenate(tensorflow.split(attention_out, self.n_heads, axis=0), axis=2)
+            outputs = backend.dot(attention_concat, self.weights_linear)
+            return outputs
+        def compute_output_shape(self, input_shape):
+            if self.create_queries:
+                k_shape, v_shape = input_shape
+                return v_shape
+            else:
+                q_shape, k_shape, v_shape = input_shape
+                return q_shape
 
-        def forward(self, input):
-            x = self.linear1(input)
-            x = torch_F.relu(x)
-            output = self.linear2(x)
-            return output
+class wraplayers:
+    def Conv2D_Norm_Act(filters, kernel_size, padding='same', activate=True, activation='relu'):
+        def call(inputs):
+            conv_outputs = layers.Conv2D(filters=filters, kernel_size=kernel_size, padding=padding)(inputs)
+            outputs = layers.BatchNormalization()(conv_outputs)
+            if activate:
+                outputs = layers.Activation(activation)(outputs)
+            return outputs
+        return call
 
-    class Positional_Encoding(torch.nn.Module):
-        def __init__(self, input_shape:tuple):
-            super(wrap.Positional_Encoding, self).__init__()
-            self.batch, self.length, self.dim = input_shape
-            position_encodings = torch.zeros((self.length, self.dim), requires_grad=False)
-            for pos in range(self.length):
-                for i in range(self.dim):
-                    position_encodings[pos][i] = 2*pos#pos/10000**((i-i%2)/self.dim)
-            #position_encodings[:, 0::2] = torch.sin(position_encodings[:, 0::2])
-            #position_encodings[:, 1::2] = torch.cos(position_encodings[:, 1::2])
-            position_encodings = position_encodings.unsqueeze(0)
-            self.register_buffer('PE', position_encodings)
+    def Identity_Block(filters, kernel_size, activation='relu'):
+        def call(inputs):
+            outputs = wraplayers.Conv2D_Norm_Act(filters, kernel_size, activation=activation)(inputs)
+            outputs = wraplayers.Conv2D_Norm_Act(filters, kernel_size, activation=activation)(outputs)
+            outputs = wraplayers.Conv2D_Norm_Act(filters, kernel_size, activate=False)(outputs)
+            outputs = layers.add([outputs, inputs])
+            outputs = layers.Activation(activation)(outputs)
+            return outputs
+        return call
 
-        def forward(self, input:torch.Tensor)->torch.Tensor:
-            position_encodings = self.PE.expand((input.shape[0], -1, -1))
-            return input + position_encodings
+    def Conv_Block(filters, kernel_size, activation='relu'):
+        def call(inputs):
+            outputs = wraplayers.Conv2D_Norm_Act(filters, kernel_size, activation=activation)(inputs)
+            outputs = wraplayers.Conv2D_Norm_Act(filters, kernel_size, activation=activation)(outputs)
+            outputs = wraplayers.Conv2D_Norm_Act(filters, kernel_size, activate=False)(outputs)
+            outputs2 = wraplayers.Conv2D_Norm_Act(filters, kernel_size, activate=False)(inputs)
+            outputs = layers.add([outputs, outputs2])
+            outputs = layers.Activation(activation)(outputs)
+            return outputs
+        return call
 
-    class Dense_Decoder(torch.nn.Module):
-        def __init__(self, input_shape:tuple, decoder_stack:int, feed_forward_size:int, drop_rate:float):
-            super(wrap.Dense_Decoder, self).__init__()
-            self.input_shape = input_shape
-            self.batch, self.length, self.dim = self.input_shape
-            self.decoder_stack = decoder_stack
-            self.feed_forward_size = feed_forward_size
-            self.drop_rate = drop_rate
+    def Feed_Forward(size, activation):
+        def call(inputs):
+            outputs = layers.Dense(size, activation=activation)(inputs)
+            outputs = layers.Dense(inputs.shape[-1])(outputs)
+            return outputs
+        return call
 
-            decoder_list = [torch.nn.Linear(self.dim, self.feed_forward_size)]
-            for _ in range(self.decoder_stack):
-                decoder_list.append(torch.nn.Linear(self.feed_forward_size, self.feed_forward_size))
-                decoder_list.append(torch.nn.Linear(self.feed_forward_size, self.feed_forward_size))
-                decoder_list.append(torch.nn.LayerNorm(self.feed_forward_size))
-                decoder_list.append(torch.nn.Dropout(self.drop_rate))
-                decoder_list.append(torch.nn.ReLU())
-            decoder_list.append(torch.nn.Linear(self.feed_forward_size, self.dim))
-            self.decoder = torch.nn.Sequential(*decoder_list)
+    def Encoder(n_heads, keys_dim, values_dim, feed_forward_size):
+        def call(inputs):
+            attention_outputs = customlayers.Multi_Head_Attention(n_heads, keys_dim, values_dim)([inputs, inputs, inputs])
+            add_outputs = layers.add([attention_outputs, inputs])
+            norm_outputs = layers.LayerNormalization()(add_outputs)
+            dense_outputs = wraplayers.Feed_Forward(feed_forward_size, 'relu')(norm_outputs)
+            add_outputs = layers.add([dense_outputs, norm_outputs])
+            norm_outputs = layers.LayerNormalization()(add_outputs)
+            return norm_outputs
+        return call
 
-        def forward(self, tgt:torch.Tensor, memory:torch.Tensor, tgt_mask= None, memory_mask= None, tgt_key_padding_mask= None, memory_key_padding_mask= None)->torch.Tensor:
-            return self.decoder(memory)
+    def Decoder(n_heads, keys_dim, values_dim, feed_forward_size):
+        def call(inputs):
+            inputs_from_encoder, inputs_from_outputs = inputs
+            attention_outputs = customlayers.Multi_Head_Attention(n_heads, keys_dim, values_dim)([inputs_from_outputs, inputs_from_outputs, inputs_from_outputs])
+            add_outputs = layers.add([attention_outputs, inputs_from_outputs])
+            norm_outputs = layers.LayerNormalization()(add_outputs)
+            attention_outputs = customlayers.Multi_Head_Attention(n_heads, keys_dim, values_dim)([norm_outputs, inputs_from_encoder, inputs_from_encoder])
+            add_outputs = layers.add([attention_outputs, norm_outputs])
+            norm_outputs = layers.LayerNormalization()(add_outputs)
+            dense_outputs = wraplayers.Feed_Forward(feed_forward_size, 'relu')(norm_outputs)
+            add_outputs = layers.add([dense_outputs, norm_outputs])
+            norm_outputs = layers.LayerNormalization()(add_outputs)
+            return norm_outputs
+        return call
 
-    class Pooling_Decoder_Layer(torch.nn.Module):
-        def __init__(self, in_dim:int, feed_forward_size:int, drop_rate:float):
-            super(wrap.Pooling_Decoder_Layer, self).__init__()
-            self.dim = in_dim
-            self.dropout = drop_rate
-            self.feed_forward_size = feed_forward_size
+    def Set_Decoder(n_heads, keys_dim, values_dim, feed_forward_size):
+        def call(inputs):
+            inputs_from_encoder = inputs
+            attention1_outputs = customlayers.Multi_Head_Attention(n_heads, keys_dim, values_dim, True)([inputs_from_encoder, inputs_from_encoder])
+            attention2_outputs = customlayers.Multi_Head_Attention(n_heads, keys_dim, values_dim)([attention1_outputs, attention1_outputs, attention1_outputs])
+            add_outputs = layers.add([attention1_outputs, attention2_outputs])
+            norm_outputs = layers.LayerNormalization()(add_outputs)
+            dense_outputs = wraplayers.Feed_Forward(feed_forward_size, 'relu')(norm_outputs)
+            add_outputs = layers.add([dense_outputs, norm_outputs])
+            norm_outputs = layers.LayerNormalization()(add_outputs)
+            dense_outputs = wraplayers.Feed_Forward(feed_forward_size, 'relu')(norm_outputs)
+            norm_outputs = layers.LayerNormalization()(add_outputs)
+            return norm_outputs
+        return call
 
-            self.atte1 = torch.nn.MultiheadAttention(self.dim, 1, self.dropout, batch_first=True)
-            #self.norm1 = torch.nn.LayerNorm(self.dim)
-            self.ff1 = wrap.Feed_Forward(self.dim, self.feed_forward_size)
-            self.norm2 = torch.nn.LayerNorm(self.dim)
-            self.atte2 = torch.nn.MultiheadAttention(self.dim, 1, self.dropout, batch_first=True)
-            #self.norm3 = torch.nn.LayerNorm(self.dim)
-            self.ff2 = wrap.Feed_Forward(self.dim, self.feed_forward_size)
-            self.norm4 = torch.nn.LayerNorm(self.dim)
-            #self.ff3 = wrap.Feed_Forward(self.dim, self.feed_forward_size)
+    def Transform(n_heads, keys_dim, values_dim, encoder_stack, decoder_stack, feed_forward_size):
+        def call(inputs):
+            xe = inputs
+            for i in range(encoder_stack):
+                xe = wraplayers.Encoder(n_heads, keys_dim, values_dim, feed_forward_size)(xe)
+            xd = backend.zeros_like(inputs)
+            xd = layers.Reshape((1, -1))(xd)
+            for i in range(decoder_stack):
+                xd = wraplayers.Decoder(n_heads, keys_dim, values_dim, feed_forward_size)([xe, xd])
+            outputs = xd
+            return outputs
+        return call
 
-        def forward(self, tgt:torch.Tensor, memory:torch.Tensor, tgt_mask=None, memory_mask=None, tgt_key_padding_mask=None, memory_key_padding_mask=None)->torch.Tensor:
-            #shortcut = tgt
-            x, _ = self.atte1(tgt, memory, memory)
-            #x += shortcut
-            #x = self.norm1(x)
-            #shortcut = x
-            x = self.ff1(x)
-            #x += shortcut
-            x = self.norm2(x)
-            #shortcut = x
-            x, _ = self.atte2(x, x, x)
-            #x += shortcut
-            #x = self.norm3(x)
-            #shortcut = x
-            x = self.ff2(x)
-            #x += shortcut
-            #x = self.norm4(x)
-            output = self.norm4(x)
-            #output = self.ff3(x)
-            return output
-
-    class Pooling_Decoder(torch.nn.Module):
-        def __init__(self, input_shape:tuple, decoder_stack:int, feed_forward_size:int, drop_rate:float):
-            super(wrap.Pooling_Decoder, self).__init__()
-            self.input_shape = input_shape
-            self.batch, self.length, self.dim = self.input_shape
-            self.decoder_stack = decoder_stack
-            self.feed_forward_size = feed_forward_size
-            self.drop_rate = drop_rate
-
-            trainable_queries = torch.nn.parameter.Parameter(torch.empty((1, self.length, self.dim)))
-            trainable_queries.data.uniform_(-1, 1)
-            self.register_parameter('queries', trainable_queries)
-            self.decoderlayer_mlist = torch.nn.ModuleList(self.decoder_stack * [wrap.Pooling_Decoder_Layer(self.dim, self.feed_forward_size, self.drop_rate)])
-            self.dropout = torch.nn.Dropout(self.drop_rate)
-
-        def forward(self, tgt:torch.Tensor, memory:torch.Tensor, tgt_mask= None, memory_mask= None, tgt_key_padding_mask= None, memory_key_padding_mask= None)->torch.Tensor:
-            x = self.queries.expand(memory.shape[0], -1, -1)
-            x = self.dropout(x)
-            for decoderlayer in self.decoderlayer_mlist:
-                x = decoderlayer(x, memory)
-            output = x
-            return output
-
-class models:
-    class ATCNN(torch.nn.Module):
-        def __init__(self, input_shape:tuple, filter_num:int):
-            #Input : (batch_size, channels, length, dim) (None, 1, 10, 10) or (None, 1, 22, 7)
-            super(models.ATCNN, self).__init__()
-            self.batch, self.channel, self.length, self.dim = input_shape
-            self.filter = filter_num
-
-            self.conv_list = [wrap.Conv2D_Norm_Act(self.channel, self.filter, (5, 5))]
-            for _ in range(3):
-                self.conv_list.append(wrap.Conv2D_Norm_Act(self.filter, self.filter, (3, 3)))
-            self.conv_list.append(wrap.Conv2D_Norm_Act(self.filter, self.filter, (2, 2)))
-            self.conv = torch.nn.Sequential(*self.conv_list)
-            self.maxpool = torch.nn.Sequential(torch.nn.MaxPool2d((2, 2)), torch.nn.BatchNorm2d(self.filter), torch.nn.ReLU())
-            self.flatten = torch.nn.Flatten(1)
-            self.linear = torch.nn.Sequential(wrap.Linear_Norm_Drop_Act(self.filter*math.floor((self.length-2)/2+1)*math.floor((self.dim-2)/2+1), 200, drop_rate=0.2), wrap.Linear_Norm_Drop_Act(200, 100, drop_rate=0.2))
-            self.output = torch.nn.Linear(100, 1)
-
-        def forward(self, input):
-            x = self.conv(input)
-            x = self.maxpool(x)
-            x = self.flatten(x)
-            x = self.linear(x)
-            output = self.output(x)
-            return output
-
-    class Dense(torch.nn.Module):
-        def __init__(self, input_shape:tuple):
-            #Input : (batch_size, dim) (None, 100)
-            super(models.Dense, self).__init__()
-            self.dim = input_shape[-1]
-
-            linear1_list = 5 * [wrap.Linear_Norm_Drop_Act(self.dim, self.dim, drop=False)]
-            self.linear1 = torch.nn.Sequential(*linear1_list)
-            self.linear2 = torch.nn.Sequential(wrap.Linear_Norm_Drop_Act(self.dim, self.dim, drop_rate=0.2), wrap.Linear_Norm_Drop_Act(self.dim, self.dim, drop_rate=0.2))
-            self.output = torch.nn.Linear(self.dim, 1)
-
-        def forward(self, input):
-            x = self.linear1(input)
-            x = self.linear2(x)
-            output = self.output(x)
-            return output
-
-    class ResNet_50(torch.nn.Module):
-        def __init__(self, input_shape:tuple, filter_num:int):
-            #Input : (batch_size, channels, length, dim) (None, 1, 22, 7)
-            super(models.ResNet_50, self).__init__()
-
-            self.batch, self.channel, self.length, self.dim = input_shape
-            self.filter = filter_num
-
-            self.conv_list = [wrap.Conv2D_Norm_Act(self.channel, self.filter, (3, 3))]
-            for _ in range(4):
-                self.conv_list.append(wrap.Conv_Block(self.filter, self.filter, (2, 2)))
-                for _ in range(3):
-                    self.conv_list.append(wrap.Identity_Block(self.filter, (2, 2)))
-            self.conv = torch.nn.Sequential(*self.conv_list)
-            self.avgpool = torch.nn.AvgPool2d((2, 2))
-            self.flatten = torch.nn.Flatten(1)
-            self.linear = torch.nn.Sequential(wrap.Linear_Norm_Drop_Act(self.filter*math.floor((self.length-2)/2+1)*math.floor((self.dim-2)/2+1), 200, drop_rate=0.2), wrap.Linear_Norm_Drop_Act(200, 100, drop_rate=0.2))
-            self.output = torch.nn.Linear(100, 1)
+    def Set_Transform(n_heads, keys_dim, values_dim, encoder_stack, decoder_stack, feed_forward_size):
+        def call(inputs):
+            xe = inputs
+            for i in range(encoder_stack):
+                xe = wraplayers.Encoder(n_heads, keys_dim, values_dim, feed_forward_size)(xe)
+            xd = wraplayers.Feed_Forward(feed_forward_size, 'relu')(xe)
+            for i in range(decoder_stack):
+                xd = wraplayers.Set_Decoder(n_heads, keys_dim, values_dim, feed_forward_size)(xe)
+            outputs = xd
+            return outputs
+        return call
         
-        def forward(self, input):
-            x = self.conv(input)
-            x = self.avgpool(x)
-            x = self.flatten(x)
-            x = self.linear(x)
-            output = self.output(x)
-            return output
+class models:
+    def ATCNN_model(metric = [metrics.Tc_accuracy]):
+        model = kmodels.Sequential()
 
-    class Transformer(torch.nn.Module):
-        def __init__(self, input_shape:tuple, encoder_stack:int, decoder_stack:int):
-            #Input : (batch_size, length, dim) (None, 22, 7) or (None, 10, 2)
-            super(models.Transformer, self).__init__()
-            self.input_shape = input_shape
-            self.batch, self.length, self.dim = self.input_shape
-            self.encoder_stack = encoder_stack
-            self.decoder_stack = decoder_stack
+        model.add(layers.Conv2D(filters=64, kernel_size=(5, 5), padding='same', input_shape=(10, 10, 1)))
+        model.add(layers.BatchNormalization())
+        model.add(layers.Activation('relu'))
 
-            self.positional_encoder =wrap.Positional_Encoding(self.input_shape)
-            self.transformer = torch.nn.Transformer(self.dim, 1, self.encoder_stack, self.decoder_stack, 100, 0.1, batch_first=True)
-            self.flatten = torch.nn.Flatten(1)
-            self.linear = torch.nn.Sequential(wrap.Linear_Norm_Drop_Act(self.length*self.dim, 200, drop_rate=0.2), wrap.Linear_Norm_Drop_Act(200, 100, drop_rate=0.1))
-            self.output = torch.nn.Linear(100, 1)
+        model.add(layers.Conv2D(filters=64, kernel_size=(3, 3), padding='same'))
+        model.add(layers.BatchNormalization())
+        model.add(layers.Activation('relu'))
 
-        def forward(self, input:torch.Tensor, tgt:torch.Tensor):
-            y = tgt.reshape((tgt.shape[0], 1, 1))
-            y = y.expand(-1, input.shape[1], input.shape[2])
-            x = self.positional_encoder(input)
-            x = self.transformer(x, y)
-            x = self.flatten(x)
-            x = self.linear(x)
-            output = self.output(x)
-            return output
+        model.add(layers.Conv2D(filters=64, kernel_size=(3, 3), padding='same'))
+        model.add(layers.BatchNormalization())
+        model.add(layers.Activation('relu'))
 
-    class SetTransformer(torch.nn.Module):
-        def __init__(self, input_shape:tuple, flag:str, encoder_stack:int, decoder_stack:int):
-            #Input : (batch_size, length, dim) (None, 22, 7) or (None, 10, 2)
-            super(models.SetTransformer, self).__init__()
-            self.flag = flag
-            self.input_shape = input_shape
-            self.batch, self.length, self.dim = self.input_shape
-            self.encoder_stack = encoder_stack
-            self.decoder_stack = decoder_stack
+        model.add(layers.Conv2D(filters=64, kernel_size=(3, 3), padding='same'))
+        model.add(layers.BatchNormalization())
+        model.add(layers.Activation('relu'))
 
-            self.positional_encoder =wrap.Positional_Encoding(self.input_shape)
-            if flag == 'Dense_Decoder':
-                #decoder_layer = wrap.Dense_Decoder_Layer(self.dim, 100, 0.05)
-                #decoder = torch.nn.TransformerDecoder(decoder_layer, self.decoder_stack)
-                decoder = wrap.Dense_Decoder(self.input_shape, self.decoder_stack, 100, 0.02)
-            elif flag == 'Pooling_Decoder':
-                decoder = wrap.Pooling_Decoder(self.input_shape, self.decoder_stack, 100, 0.0)
-            self.transformer = torch.nn.Transformer(self.dim, 1, self.encoder_stack, self.decoder_stack, 100, 0.0, custom_decoder=decoder, batch_first=True)
-            self.flatten = torch.nn.Flatten(1)
-            self.linear = torch.nn.Sequential(wrap.Linear_Norm_Drop_Act(self.length*self.dim, 200, drop_rate=0.0), wrap.Linear_Norm_Drop_Act(200, 100, drop_rate=0.0))
-            self.output = torch.nn.Linear(100, 1)
+        model.add(layers.Conv2D(filters=64, kernel_size=(2, 2), padding='same'))
+        model.add(layers.BatchNormalization())
+        model.add(layers.Activation('relu'))
 
-        def forward(self, input):
-            tgt = torch.zeros_like(input)
-            x = self.positional_encoder(input)
-            x = self.transformer(x, tgt)
-            x = self.flatten(x)
-            x = self.linear(x)
-            output = self.output(x)
-            return output
+        model.add(layers.MaxPool2D(pool_size=(2, 2)))
+        model.add(layers.BatchNormalization())
+        model.add(layers.Activation('relu'))
 
-#utils.utils.Summary_Param(models.SetTransformer((128, 22, 7), 'Dense_Decoder', 6, 3))
+        model.add(layers.Flatten())
+        model.add(layers.Dense(200))
+
+        model.add(layers.BatchNormalization())
+        model.add(layers.Dropout(0.2))
+        model.add(layers.Activation('relu'))
+
+        model.add(layers.Dense(100))
+
+        model.add(layers.BatchNormalization())
+        model.add(layers.Dropout(0.2))
+        model.add(layers.Activation('relu'))
+
+        model.add(layers.Dense(1))
+        model.add(layers.Activation('linear'))
+
+        model.compile(optimizer=optimizers.adadelta_v2.Adadelta(), loss=losses.mean_absolute_error, metrics = metric)
+
+        return model
+
+    def Dense_model(metric = [metrics.Tc_accuracy]):
+        model = kmodels.Sequential()
+
+        model.add(layers.Dense(units=100, input_shape=(100,)))
+        model.add(layers.BatchNormalization())
+        model.add(layers.Activation('relu'))
+
+        model.add(layers.Dense(100))
+        model.add(layers.BatchNormalization())
+        model.add(layers.Activation('relu'))
+
+        model.add(layers.Dense(100))
+        model.add(layers.BatchNormalization())
+        model.add(layers.Activation('relu'))
+
+        model.add(layers.Dense(100))
+        model.add(layers.BatchNormalization())
+        model.add(layers.Activation('relu'))
+
+        model.add(layers.Dense(100))
+        model.add(layers.BatchNormalization())
+        model.add(layers.Activation('relu'))
+
+        model.add(layers.Dense(100))
+
+        model.add(layers.BatchNormalization())
+        model.add(layers.Dropout(0.2))
+        model.add(layers.Activation('relu'))
+
+        model.add(layers.Dense(100))
+
+        model.add(layers.BatchNormalization())
+        model.add(layers.Dropout(0.2))
+        model.add(layers.Activation('relu'))
+
+        model.add(layers.Dense(1))
+        model.add(layers.Activation('linear'))
+
+        model.compile(optimizer=optimizers.adadelta_v2.Adadelta(), loss=losses.mean_absolute_error, metrics = metric)
+
+        return model
+
+    def OATCNN_model(metric = [metrics.Tc_accuracy]):
+        model = kmodels.Sequential()
+
+        model.add(layers.Conv2D(filters=64, kernel_size=(5, 5), padding='same', input_shape=(22, 7, 1)))
+        model.add(layers.BatchNormalization())
+        model.add(layers.Activation('relu'))
+
+        model.add(layers.Conv2D(filters=64, kernel_size=(3, 3), padding='same'))
+        model.add(layers.BatchNormalization())
+        model.add(layers.Activation('relu'))
+
+        model.add(layers.Conv2D(filters=64, kernel_size=(3, 3), padding='same'))
+        model.add(layers.BatchNormalization())
+        model.add(layers.Activation('relu'))
+
+        model.add(layers.Conv2D(filters=64, kernel_size=(3, 3), padding='same'))
+        model.add(layers.BatchNormalization())
+        model.add(layers.Activation('relu'))
+
+        model.add(layers.Conv2D(filters=64, kernel_size=(2, 2), padding='same'))
+        model.add(layers.BatchNormalization())
+        model.add(layers.Activation('relu'))
+
+        model.add(layers.MaxPool2D(pool_size=(2, 1)))
+        model.add(layers.BatchNormalization())
+        model.add(layers.Activation('relu'))
+
+        model.add(layers.Flatten())
+        model.add(layers.Dense(200))
+
+        model.add(layers.BatchNormalization())
+        model.add(layers.Dropout(0.2))
+        model.add(layers.Activation('relu'))
+
+        model.add(layers.Dense(100))
+
+        model.add(layers.BatchNormalization())
+        model.add(layers.Dropout(0.2))
+        model.add(layers.Activation('relu'))
+
+        model.add(layers.Dense(1))
+        model.add(layers.Activation('linear'))
+
+        model.compile(optimizer=optimizers.adadelta_v2.Adadelta(), loss=losses.mean_absolute_error, metrics = metric)
+
+        return model
+
+    def RESATCNN_model(metric = [metrics.Tc_accuracy]):
+        input = layers.Input((22, 7, 1))
+
+        x = layers.ZeroPadding2D((2, 2))(input)
+
+        x = wraplayers.Conv2D_Norm_Act(filters=64, kernel_size=(3, 2), padding='valid')(x)
+        
+        for i in range(0, 4):
+            x = wraplayers.Conv_Block(filters=64, kernel_size=(2, 2), activation='relu')(x)
+            for j in range(0, 3):
+                x = wraplayers.Identity_Block(filters =64, kernel_size=(2, 2), activation='relu')(x)
+        
+        x = layers.AveragePooling2D(pool_size=(2, 1))(x)
+        x = layers.Flatten()(x)
+
+        x = layers.Dense(200)(x)
+        x = layers.BatchNormalization()(x)
+        x = layers.Dropout(0.1)(x)
+        x = layers.Activation('relu')(x)
+
+        x = layers.Dense(100)(x)
+        x = layers.BatchNormalization()(x)
+        x = layers.Dropout(0.1)(x)
+        x = layers.Activation('relu')(x)
+
+        x = layers.Dense(1)(x)
+        x = layers.Activation('linear')(x)
+        
+        model = kmodels.Model(inputs=input, outputs=x)
+        model.compile(optimizer=optimizers.adadelta_v2.Adadelta(), loss=losses.mean_absolute_error, metrics = metric)
+
+        return model
+
+    def Transform_model(metric = [metrics.Tc_accuracy]):
+        inputs = layers.Input((10, 2))
+        tran_outputs = wraplayers.Transform(n_heads=8, keys_dim=64, values_dim=64, encoder_stack=6, decoder_stack=6, feed_forward_size=100)(inputs)
+
+        x = layers.Flatten()(tran_outputs)
+        x = layers.Dense(100)(x)
+        x = layers.BatchNormalization()(x)
+        x = layers.Dropout(0.1)(x)
+        x = layers.Activation('relu')(x)
+
+        x = layers.Dense(100)(x)
+        x = layers.BatchNormalization()(x)
+        x = layers.Dropout(0.1)(x)
+        x = layers.Activation('relu')(x)
+
+        x = layers.Dense(1)(x)
+        x = layers.Activation('linear')(x)
+
+        model = kmodels.Model(inputs=inputs, outputs=x)
+        model.compile(optimizer=optimizers.adadelta_v2.Adadelta(), loss=losses.mean_absolute_error, metrics = metric)
+
+        return model
+
+    def Set_Transform_model(metric = [metrics.Tc_accuracy]):
+        inputs = layers.Input(shape=(22, 7))
+
+        x = customlayers.Positional_Encoding()(inputs)
+        x = wraplayers.Set_Transform(n_heads=8, keys_dim=64, values_dim=64, encoder_stack=6, decoder_stack=2, feed_forward_size=100)(x)
+
+        x = layers.Flatten()(x)
+
+        for i in range(2):
+            x = layers.Dense(100)(x)
+            x = layers.BatchNormalization()(x)
+            x = layers.Dropout(0.1)(x)
+            x = layers.Activation('relu')(x)
+
+        x = layers.Dense(1)(x)
+        x = layers.Activation('linear')(x)
+
+        model = kmodels.Model(inputs=inputs, outputs=x)
+        model.compile(optimizer=optimizers.adam_v2.Adam(), loss=losses.mean_absolute_error, metrics = metric)
+
+        return model
+
+    def SelfAttention_model(metric = [metrics.Tc_accuracy]):
+        inputs = layers.Input((22, 7))
+
+        x = customlayers.Positional_Encoding()(inputs)
+        for i in range(8):
+            x = wraplayers.Encoder(n_heads=8, keys_dim=64, values_dim=64, feed_forward_size=100)(x)
+            x = layers.Activation('relu')(x)
+
+        for i in range(2):
+            dense_outputs = wraplayers.Feed_Forward(100, 'relu')(x)
+            x = layers.add([x, dense_outputs])
+            x = layers.BatchNormalization()(x)
+            x = layers.Dropout(0.1)(x)
+            x = layers.Activation('relu')(x)
+
+        x = layers.Flatten()(x)
+
+        for i in range(2):
+            x = layers.Dense(100)(x)
+            x = layers.BatchNormalization()(x)
+            x = layers.Dropout(0.1)(x)
+            x = layers.Activation('relu')(x)
+
+        x = layers.Dense(1)(x)
+        x = layers.Activation('linear')(x)
+
+        model = kmodels.Model(inputs=inputs, outputs=x)
+        model.compile(optimizer=optimizers.adadelta_v2.Adadelta(), loss=losses.mean_absolute_error, metrics = metric)
+
+        return model
+        
+#models.Set_Transform_model().summary()

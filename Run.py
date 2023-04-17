@@ -1,54 +1,78 @@
-import framework, model, utils
+import model
+from train import train
+from predict import predict
+import os
 
-def Run(module:model.torch.nn.Module, module_arg:list, embed_model:tuple, model_name:str, train:bool=True, predict:bool=True)->None:
-    opt_train_data = framework.option.data()
-    opt_train_data.data_dir_list = [    #'./data/test.txt',
-                                        './data/insulator.txt', './data/superconductor.txt'
-    ]
-    opt_train_data.embed_func = utils.utils.Embed
-    opt_train_data.embed_func_arg = [embed_model]
-    opt_train_data.read_func = utils.utils.Read_Data
-    opt_train_data.read_func_arg = ['WithTc']
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '1'
 
-    opt_train = framework.option.train()
-    opt_train.validate = True
-    opt_train.validate_rate = 0.02
-    opt_train.epoch = 2500
-    opt_train.batch_size = 128
-    opt_train.model = module(embed_model[1](), *module_arg)
-    opt_train.optimizer_func = model.torch.optim.Adadelta
-    opt_train.optimizer_arg = []
-    opt_train.lossfunc = model.torch.nn.L1Loss
-    opt_train.lossfunc_arg = []
-    opt_train.metrics = {   'Tc_accuracy' : (utils.metrics.Tc_accuracy, [1.0]),
-                            'Sc_accuracy,Sc_precision,Sc_recall,Sc_F1' : (utils.metrics.Sc_accuracy, [0.1]),
-                            'R2,RMSE,MAE,CC' : (utils.metrics.Performance, [])
-    }
-    opt_train.model_dir = './models'
-    opt_train.log_dir = './logs/'+model_name+'_log'
-    opt_train.model_name = model_name
+class run:
+    def __init__(self):
+        self.metric = [
+            model.metrics.Tc_accuracy, 
+            model.metrics.superconductor_accuracy, 
+            model.metrics.gen_performance
+        ]
+        self.model = model.models.ATCNN_model(self.metric)                  #
+        self.atom_table = model.atom_table.ATCNN()                          #
+        self.input_type = 'Atom_Table'                                          #
 
-    opt_predict_data = framework.option.data()
-    opt_predict_data.data_dir_list = ['./data/predict.txt'
-                                      #'./data/test.txt'
-                                    ]
-    opt_predict_data.embed_func = utils.utils.Embed
-    opt_predict_data.embed_func_arg = [embed_model]
-    opt_predict_data.read_func = utils.utils.Read_Data
-    opt_predict_data.read_func_arg = ['WithoutTc']
+        self.validation_split = 0.02                                                #
+        self.batch_size = 128                                                       #
+        self.epochs = 2500                                                          #
 
-    opt_predict = framework.option.predict()
-    opt_predict.model_path = './models/'+model_name+'.pkl'
-    opt_predict.predict_dir = './predict'
-    opt_predict.predict_name = model_name+'_answer'
+        self.log_dir = './logs/ATCNN'                                   #           
+        self.model_dir = './model'  
+        self.model_name = 'ATCNN1'                                           #
+        self.data_paths = [                                                         #
+            "./data/superconductor.txt", 
+            "./data/insulator.txt"
+            #"./data/test.txt" #80+50=130
+        ]
 
-    if train:framework.train(opt_train_data, opt_train).Run()
-    if predict:framework.predict(opt_predict_data, opt_predict).Run()
+        self.custom_objects = {
+            "Tc_accuracy" : model.metrics.Tc_accuracy, 
+            "superconductor_accuracy" : model.metrics.superconductor_accuracy, 
+            "gen_performance" : model.metrics.gen_performance,
 
-#   Run(model.models.SetTransformer, ['Dense_Decoder', 6, 3], utils.embed_models().OAT_without_channels(), 'SetTransformer7-2', train=False)
+            "Positional_Encoding" : model.customlayers.Positional_Encoding,
+            "Scaled_Dot_Product_Attention" : model.customlayers.Scaled_Dot_Product_Attention,
+            "Multi_Head_Attention" : model.customlayers.Multi_Head_Attention,
 
-#   Run(model.models.ATCNN, [64], utils.embed_models().Atom_Table(), 'ATCNN1-1', train=False)
+            "Conv2D_Norm_Act" : model.wraplayers.Conv2D_Norm_Act,
+            "Identity_Block" : model.wraplayers.Identity_Block,
+            "Conv_Block" : model.wraplayers.Conv_Block,
+            "Encoder" : model.wraplayers.Encoder,
+            "Decoder" : model.wraplayers.Decoder,
+            "Transform" : model.wraplayers.Transform
+        }
 
-for i in range(1, 6):
-    Run(model.models.SetTransformer, ['Dense_Decoder', 6, 3], utils.embed_models().OAT_without_channels(), 'SetTransformer7-'+'{}'.format(i), train=False)
-    Run(model.models.ATCNN, [64], utils.embed_models().Atom_Table(), 'ATCNN1-'+'{}'.format(i), train=False)
+        self.answer_dir = './predict'
+        self.answer_name = 'test_answer'
+        self.predict_paths = ["./data/test1.txt"]
+
+    def train(self):
+        Train = train(self.model, self.atom_table, self.input_type)
+        Train.validation_split = self.validation_split
+        Train.batch_size = self.batch_size
+        Train.epochs = self.epochs
+        Train.log_dir = self.log_dir
+        Train.model_dir = self.model_dir
+        Train.data_paths = self.data_paths
+        history = Train.train(self.model_name)
+        return history
+
+    def predict(self):
+        Predict = predict(self.model_dir+'/'+self.model_name+'.h5', self.atom_table, self.input_type, self.custom_objects)
+        Predict.batch_size = self.batch_size
+        Predict.answer_dir = self.answer_dir
+        Predict.predict_paths = self.predict_paths
+        compss, Tc = Predict.predict(self.answer_name)
+        return compss, Tc
+
+
+Run = run()
+
+#Run.train()
+
+Run.predict()
+
